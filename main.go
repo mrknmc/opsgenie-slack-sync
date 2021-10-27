@@ -43,7 +43,7 @@ func (s *Syncer) UpdateUserGroup(groupName string, ids []string) error {
 	return err
 }
 
-func (s *Syncer) GetSlackId(email string) (string, error) {
+func (s *Syncer) GetSlackID(email string) (string, error) {
 	user, err := s.Slack.GetUserByEmail(email)
 	if err != nil {
 		return "", err
@@ -51,7 +51,7 @@ func (s *Syncer) GetSlackId(email string) (string, error) {
 	return fmt.Sprintf("<@%s>", user.ID), nil
 }
 
-func main() {
+func Main() {
 	log.SetLevel(log.InfoLevel)
 	var scheduleClient, _ = schedule.NewClient(&client.Config{
 		ApiKey: os.Getenv("OPSGENIE_API_KEY"),
@@ -70,9 +70,9 @@ func main() {
 	// convert emails to slack ids
 	slackIds := make([]string, len(onCallUsers))
 	for i, email := range onCallUsers {
-		slackId, err := syncer.GetSlackId(email)
+		slackID, err := syncer.GetSlackID(email)
 		if err != nil {
-			slackIds[i] = slackId
+			slackIds[i] = slackID
 		} else {
 			log.Error("Could not convert email %s to slack id", email)
 		}
