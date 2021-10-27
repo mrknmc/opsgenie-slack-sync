@@ -67,14 +67,17 @@ func main() {
 		panic(err)
 	}
 
+	log.Debugf("People on call right now: %s", strings.Join(onCallUsers, ","))
+
 	// convert emails to slack ids
 	slackIds := make([]string, len(onCallUsers))
 	for i, email := range onCallUsers {
 		slackID, err := syncer.GetSlackID(email)
-		if err != nil {
+		if err == nil {
 			slackIds[i] = slackID
+			log.Debugf("Slack id for email %s is %s", email, slackID)
 		} else {
-			log.Errorf("Could not convert email %s to slack id", email)
+			log.Errorf("Could not convert email %s to slack id: %s", email, err)
 		}
 	}
 
