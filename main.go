@@ -1,4 +1,4 @@
-package sync
+package main
 
 import (
 	"context"
@@ -51,7 +51,7 @@ func (s *Syncer) GetSlackID(email string) (string, error) {
 	return fmt.Sprintf("<@%s>", user.ID), nil
 }
 
-func Main() {
+func main() {
 	log.SetLevel(log.InfoLevel)
 	var scheduleClient, _ = schedule.NewClient(&client.Config{
 		ApiKey: os.Getenv("OPSGENIE_API_KEY"),
