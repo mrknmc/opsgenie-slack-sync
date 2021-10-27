@@ -74,7 +74,7 @@ func Main() {
 		if err != nil {
 			slackIds[i] = slackID
 		} else {
-			log.Error("Could not convert email %s to slack id", email)
+			log.Errorf("Could not convert email %s to slack id", email)
 		}
 	}
 
