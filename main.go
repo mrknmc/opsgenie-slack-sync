@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -13,7 +12,6 @@ import (
 )
 
 const scheduleName string = "Engineering_schedule"
-const userGroup string = "eng-support"
 
 type Syncer struct {
 	Slack    *slack.Client
@@ -39,7 +37,7 @@ func (s *Syncer) WhoIsOnCall() ([]string, error) {
 }
 
 func (s *Syncer) UpdateUserGroup(groupName string, ids []string) error {
-	_, err := s.Slack.UpdateUserGroupMembers(userGroup, strings.Join(ids, ","))
+	_, err := s.Slack.UpdateUserGroupMembers(groupName, strings.Join(ids, ","))
 	return err
 }
 
@@ -48,30 +46,30 @@ func (s *Syncer) GetSlackID(email string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("<@%s>", user.ID), nil
+	return user.ID, nil
 }
 
 func main() {
 	log.SetLevel(log.InfoLevel)
-	var scheduleClient, _ = schedule.NewClient(&client.Config{
+	scheduleClient, _ := schedule.NewClient(&client.Config{
 		ApiKey: os.Getenv("OPSGENIE_API_KEY"),
 	})
 
-	var syncer = Syncer{
+	syncer := Syncer{
 		Slack:    slack.New(os.Getenv("SLACK_BOT_TOKEN")),
 		OpsGenie: scheduleClient,
 	}
 
-	onCallUsers, err := syncer.WhoIsOnCall()
+	onCall, err := syncer.WhoIsOnCall()
 	if err != nil {
 		panic(err)
 	}
 
-	log.Debugf("People on call right now: %s", strings.Join(onCallUsers, ","))
+	log.Debugf("People on call right now: %s", strings.Join(onCall, ","))
 
 	// convert emails to slack ids
-	slackIds := make([]string, len(onCallUsers))
-	for i, email := range onCallUsers {
+	slackIds := make([]string, len(onCall))
+	for i, email := range onCall {
 		slackID, err := syncer.GetSlackID(email)
 		if err == nil {
 			slackIds[i] = slackID
@@ -81,5 +79,11 @@ func main() {
 		}
 	}
 
-	syncer.UpdateUserGroup(userGroup, slackIds)
+	userGroup := os.Getenv("SLACK_USER_GROUP")
+	err = syncer.UpdateUserGroup(userGroup, slackIds)
+	if err == nil {
+		log.Debugf("Changed user group %s to contain %s", userGroup, strings.Join(onCall, ","))
+	} else {
+		log.Errorf("Could not update user group %s: %s", userGroup, err)
+	}
 }
